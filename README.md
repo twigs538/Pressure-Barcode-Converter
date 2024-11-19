@@ -16,21 +16,18 @@ Responsive Layout: Adapts to various screen sizes, ensuring usability.
 Installation
 Clone or download this repository:
 
-bash
-Copy code
 git clone https://github.com/twigs538/Pressure-Barcode-Converter.git
 cd Pressure-Barcode-Converter
+
 Install required Python packages:
 
-bash
-Copy code
 pip install PyQt5 pandas qrcode
+
 Usage
 Run the application:
 
-bash
-Copy code
 python fta_reader.py
+
 Features:
 
 Load CSV Data:
