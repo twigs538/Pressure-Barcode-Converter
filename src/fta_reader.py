@@ -19,7 +19,7 @@ class FTAReader(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("FTA Reader with QR Code")
-        self.setGeometry(100, 100, 800, 600)  # Ensure the window is properly sized
+        self.setGeometry(100, 100, 800, 600)
 
         # Set window icon
         self.setWindowIcon(QIcon("assets/logo.png"))
@@ -27,8 +27,9 @@ class FTAReader(QMainWindow):
         # UI Components
         self.status_label = QLabel("Status: Ready")
         self.table = QTableWidget(10, 3)  # 3 columns for reading_id, pressure_level, timestamp
-        self.connect_button = QPushButton("Connect to FTA")
+        self.generate_qr_button = QPushButton("Generate QR")
         self.read_button = QPushButton("Read Data")
+        self.clear_button = QPushButton("Clear")
         self.quit_button = QPushButton("Quit")
         self.qr_code_label = QLabel("QR Code will appear here")
         self.qr_code_label.setScaledContents(True)
@@ -53,8 +54,9 @@ class FTAReader(QMainWindow):
 
         # Buttons Layout (stacked vertically)
         button_layout = QVBoxLayout()
-        button_layout.addWidget(self.connect_button)
+        button_layout.addWidget(self.generate_qr_button)
         button_layout.addWidget(self.read_button)
+        button_layout.addWidget(self.clear_button)
         button_layout.addWidget(self.quit_button)
         main_layout.addLayout(button_layout)
 
@@ -67,8 +69,9 @@ class FTAReader(QMainWindow):
         self.apply_green_theme()
 
         # Button Connections
-        self.connect_button.clicked.connect(self.do_connect)
+        self.generate_qr_button.clicked.connect(self.generate_qr_from_table)
         self.read_button.clicked.connect(self.read_data)
+        self.clear_button.clicked.connect(self.clear_data)
         self.quit_button.clicked.connect(self.close)
 
     def apply_green_theme(self):
@@ -104,9 +107,6 @@ class FTAReader(QMainWindow):
         """
         self.setStyleSheet(green_style)
 
-    def do_connect(self):
-        self.status_label.setText("Status: Connected")
-
     def read_data(self):
         options = QFileDialog.Options()
         file_path, _ = QFileDialog.getOpenFileName(self, "Open CSV File", "", "CSV Files (*.csv)", options=options)
@@ -120,7 +120,8 @@ class FTAReader(QMainWindow):
                 self.status_label.setText(f"Error: {str(e)}")
 
     def populate_table(self, data):
-        self.table.setRowCount(len(data))
+        row_count = len(data)
+        self.table.setRowCount(row_count)
         self.table.setColumnCount(3)
         self.table.setHorizontalHeaderLabels(["Reading ID", "Pressure Level", "Timestamp"])
 
@@ -128,6 +129,32 @@ class FTAReader(QMainWindow):
             self.table.setItem(row_idx, 0, QTableWidgetItem(str(row["reading_id"])))
             self.table.setItem(row_idx, 1, QTableWidgetItem(str(row["pressure_level"])))
             self.table.setItem(row_idx, 2, QTableWidgetItem(str(row["timestamp"])))
+
+        # Resize table to fit content dynamically
+        self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
+
+    def generate_qr_from_table(self):
+        rows = self.table.rowCount()
+        cols = self.table.columnCount()
+
+        # Collect data from the table
+        table_data = []
+        for row in range(rows):
+            row_data = []
+            for col in range(cols):
+                item = self.table.item(row, col)
+                if item is not None:
+                    row_data.append(item.text())
+                else:
+                    row_data.append("")  # Fill empty cells with empty strings
+            if any(row_data):  # Ignore completely empty rows
+                table_data.append(row_data)
+
+        # Convert to DataFrame
+        data = pd.DataFrame(table_data, columns=["reading_id", "pressure_level", "timestamp"])
+        self.generate_qr_code(data)
+        self.status_label.setText("Status: QR Code Generated from Table Data")
 
     def generate_qr_code(self, data):
         csv_string = data.to_csv(index=False)
@@ -142,6 +169,14 @@ class FTAReader(QMainWindow):
         pixmap = QPixmap(temp_path)
         self.qr_code_label.setPixmap(pixmap)
         os.remove(temp_path)
+
+    def clear_data(self):
+        # Clear table data
+        self.table.clearContents()
+        self.table.setRowCount(10)
+        self.qr_code_label.clear()
+        self.qr_code_label.setText("QR Code will appear here")
+        self.status_label.setText("Status: Cleared")
 
 # Application Entry Point
 if __name__ == "__main__":

@@ -49,8 +49,9 @@ Application GUI
 Key Elements:
 Table: Displays the contents of the loaded CSV file.
 Buttons:
-Connect to FTA: Placeholder functionality for future connectivity.
+Generate QR: From user input data.
 Read Data: Loads CSV data into the table and generates a QR code.
+Clear: Clear table and QR code
 Quit: Closes the application.
 QR Code Display: Displays the QR code generated from the CSV data.
 Status Bar: Shows the current status (e.g., "Ready", "Data Loaded").
